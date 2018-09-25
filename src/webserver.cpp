@@ -15,26 +15,38 @@ void buildJsonInt(char* output, String name, int value) {
 }
 
 
-void handleData() {
-  char output[200];
-  // char temp[20];
-  strcpy(output,"{");
-  // for (int i=0; i<TOTAL_DOORS; i++) {
-  //   if (is_door_open[i]) {
-  //     sprintf(temp,"\"door%d\" : \"%s\"",i+1,"open");
-  //   } else {
-  //     sprintf(temp,"\"door%d\" : \"%s\"",i+1,"closed");
-  //   }
-  //   if (i>0) {
-  //     strcat(output,",");
-  //   }
-  //   strcat(output, temp);
-  // }
-  // buildJsonInt(output, "ota",is_ota_enabled);
-  strcat(output,"}");
-  server.send(200, "application/json", output);
+void buildStepsAsJson(recepie r, char* buffer) {
+  char temp[100];
+  strcpy(buffer,"[");
+  for (int i=0; i<r.totalSteps; i++) {
+    if (i>0) {
+      strcat(buffer,",");
+    }
+    preparationStep st = r.steps[i];
+    sprintf(temp,"{\"ingredient\":\"%s\",\"quantity\":\"%d\"}",getIngredientName(st.ingredient) ,st.milliliters);
+    strcat(buffer,temp);
+  }
+  strcat(buffer,"]");
 }
 
+void handleRecepies() {
+  char temp[300];
+  char output[500];
+  strcpy(output,"[");
+  for (int i=0; i<TOTAL_RECEPIES; i++) {
+    if (i>0) {
+      strcat(output,",");
+    }
+    recepie r = getRecepieById(i);
+    sprintf(temp,"{\"id\":\"%d\",\"name\":\"%s\",\"steps\" : ",r.id,r.name);
+    strcat(output,temp);
+    buildStepsAsJson (r,temp);
+    strcat(output,temp);
+    strcat(output,"}");
+  }
+  strcat(output,"]");
+  server.send(200,"application/json", output);
+}
 
 void handleLog() {
   server.send(200,"text/plain",read_log_buffer());
@@ -83,7 +95,7 @@ void handlePumpPour() {
   }
   int ml = server.arg("plain").toInt();
   char temp[10];
-  sprintf(temp,"Pumping %d from pump %d", ml, pumpId + 1);
+  sprintf(temp,"Pumping %dml from pump %d", ml, pumpId + 1);
   server.send(200,"text/plain",temp);
   pump(pumpId,ml);
 }
@@ -96,9 +108,9 @@ void handleCleanAll() {
 void setupWebServer() {
   char buff[100];
   server.on("/log", handleLog);
-  server.on("/data", handleData);
   server.on("/ota", handleOta);
   server.on("/rst", handleRestart);
+  server.on("/recepies", handleRecepies);
   for (int i=0; i<TOTAL_PUMPS; i++) {
     snprintf(buff, sizeof(buff), "/pumps/%d/clean",i+1);
     server.on(buff, handlePumpClean);
