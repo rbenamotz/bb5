@@ -137,12 +137,13 @@ void startCupAnimation() {
     if (isAnimationOn) {
         return;
     }
-    animations.StartAnimation(0, NextPixelMoveDuration, LoopAnimUpdate);  
+    animations.StartAnimation(0, NextPixelMoveDuration, FadeOutAnimUpdate);  
     isAnimationOn = true;  
 }
 void stopCupAnimation() {
     animations.StopAll();
     strip.ClearTo(RgbColor(0,0,0));
+    strip.Show();
     isAnimationOn = false;
 
 }

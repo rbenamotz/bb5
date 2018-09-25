@@ -8,7 +8,7 @@
 #include "wifi.h"
 #include "webserver.h"
 #include "neo.h"
-
+#include "mqtt.h"
 
 
 void setup() {
@@ -18,7 +18,7 @@ void setup() {
     setupOta();
     setupPumps();
     setupNeo();
-    //setupMqtt();
+    setupMqtt();
     setupPanel();
     setupWebServer();
 }
@@ -27,10 +27,8 @@ void loop() {
     loopWifi();
     loopOta();
     loopPumps();
-    // recepie r = getRecepieById(RECEPIE_ID_MOSCOW_MULE);
-    // prepareDrink(r);
     loopPanel();
+    loopMqtt();
     loopWebServer();
     loopNeo();
-    delay(5);
 }

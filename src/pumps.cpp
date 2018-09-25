@@ -3,6 +3,7 @@
 #include "user_config.h"
 #include "common.h"
 #include "neo.h"
+#include "mqtt.h"
 
 int pumps[TOTAL_PUMPS];
 int pumpsPins[TOTAL_PUMPS] = PUMPS_PINS;
@@ -76,7 +77,8 @@ void pourStuff(int ingrdientId, int milliliters) {
 }
 
 void prepareDrink(recepie r) {
-    write_to_log ("Preparing recepie %d" , r.id);
+    write_to_log ("Preparing %s" , r.name);
+    mqttPublishCurrentDrink(r.name);
     for (int i=0; i<r.totalSteps; i++) {
         preparationStep step = r.steps[i];
         pourStuff(step.ingredient,step.milliliters);
@@ -99,5 +101,6 @@ void loopPumps() {
     }
     if (totalRunningPumps==0) {
         stopCupAnimation();
+        mqttPublishCurrentDrink("");
     }
 }

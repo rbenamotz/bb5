@@ -37,12 +37,21 @@
 #define LOG_SIZE 20
 
 //WiFi
-#define WIFI_SSID "ssid"
-#define WIFI_PASS "super secret password"
+#define WIFI_SSID "ssid
+#define WIFI_PASS "password"
 #define HOST_NAME "bb5"
 // #define IP_ADDR 192, 168, 1, 3
 // #define IP_GW 192,168,1,1
 // #define IP_SUBNET 255,255,255,0
+
+//MQTT
+#define MQTT_HOST "ip address"
+#define MQTT_PORT 1883
+#define MQTT_USER "user"
+#define MQTT_PASS "password!"
+#define MQTT_TOPIC_OUT_DRINK "/bb5/drink"
+#define MQTT_TOPIC_CMD "/bb5/cmd"
+
 
 
 #endif

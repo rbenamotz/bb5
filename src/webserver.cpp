@@ -37,6 +37,18 @@ void handleGetPumps() {
   strcat(output,"]");
   server.send(200,"application/json", output);
 }
+void handlePrepDrink() {
+  int recepieId = server.arg("plain").toInt();
+  recepie r = getRecepieById(recepieId);
+  if (r.id==-1) {
+    server.send(404,"text/plain","Recepie not found");
+    return;
+  }
+  char temp[50];
+  sprintf(temp,"Preparing %s", r.name);
+  server.send(200,"text/plain",temp);
+  prepareDrink(r);
+}
 
 void buildStepsAsJson(recepie r, char* buffer) {
   char temp[100];
@@ -135,6 +147,7 @@ void setupWebServer() {
   server.on("/rst", handleRestart);
   server.on("/recepies", handleRecepies);
   server.on("/pumps", handleGetPumps);
+  server.on("/pumps/prepare", HTTP_POST, handlePrepDrink);
   for (int i=0; i<TOTAL_PUMPS; i++) {
     snprintf(buff, sizeof(buff), "/pumps/%d/clean",i+1);
     server.on(buff, handlePumpClean);
