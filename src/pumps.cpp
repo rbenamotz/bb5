@@ -5,6 +5,8 @@
 
 int pumps[TOTAL_PUMPS];
 int pumpsPins[TOTAL_PUMPS] = PUMPS_PINS;
+pumpState pumpStates[TOTAL_PUMPS];
+
 
 void setupPumps() {
     pumps[0] = PUMP_ID_0;
@@ -21,20 +23,24 @@ void setupPumps() {
     }
  }
 
-void loopPumps() {
-
-}
-
 void pump(int pumpId, int milliliters) {
     int pin = pumpsPins[pumpId];
     int duration =  milliliters / (PUMP_FLOW_ML_PER_SEC) * 1000;
     write_to_log ("Pouring %dml from pump %d for %d ms", milliliters, pumpId, duration);
     digitalWrite (pin,HIGH);
-    delay(duration);
-    // delay(3000);
-    digitalWrite (pin,LOW);
+    unsigned long l = millis();
+    pumpStates[pumpId].isWorking = true;
+    pumpStates[pumpId].startTime = l;
+    pumpStates[pumpId].scheduledStop = l + duration;
 }
 
+
+void stopPump(int pumpId) {
+    int pin = pumpsPins[pumpId];
+    digitalWrite (pin,LOW);
+    pumpStates[pumpId].isWorking = false;
+    write_to_log("Stopped pump %d",pumpId);
+}
 
 void cleanPump(int pumpId) {
     pump(pumpId,PUMP_CLEAN_VOLUME);
@@ -45,16 +51,8 @@ void cleanAllPumps() {
     int duration =  PUMP_CLEAN_VOLUME / (PUMP_FLOW_ML_PER_SEC) * 1000 / TOTAL_PUMPS;
     write_to_log("Cleaning all pumps for %dms", duration);
     for (int i=0 ; i<TOTAL_PUMPS; i++) {
-        int pin = pumpsPins[i];
-        digitalWrite (pin,HIGH);
+        cleanPump(i);
     }
-    delay(duration);
-    for (int i=0 ; i<TOTAL_PUMPS; i++) {
-        int pin = pumpsPins[i];
-        digitalWrite (pin,LOW);
-    }
-    write_to_log("Done clenaing");
-
 }
 
 int pumpIdByIngredientId(int ingrdientId) {
@@ -83,4 +81,16 @@ void prepareDrink(recepie r) {
     }
 }
 
+
+void loopPumps() {
+    for (int i=0; i<TOTAL_PUMPS; i++) {
+        pumpState p = pumpStates[i];
+        if (!p.isWorking) {
+            continue;
+        }
+        if (millis() >= p.scheduledStop) {
+            stopPump(i);
+        }
+    }
+}
 

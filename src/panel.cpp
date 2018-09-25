@@ -7,6 +7,7 @@
 unsigned long lastPanelCheck = 0;
 unsigned long lastPanelStatusLogged = 0;
 int buttonAssignments[] = BUTTON_RECEPIES;
+int currentButtonDown = -1;
 
 
 void setupPanel() {
@@ -33,6 +34,33 @@ void logPanel (byte incoming) {
 
 }
 
+bool stopOperationWithAnyButton() {
+    bool output = false;
+    for (int i=0; i<TOTAL_PUMPS; i++) {
+        pumpState ps = pumpStates[i];
+        if (ps.isWorking) {
+            write_to_log("Need to stop pump %d due to button down",i);
+            stopPump(i);
+            output = true;
+        }
+    }
+    return output;
+}
+
+void handleButtonDown(int buttonId) {
+    if (stopOperationWithAnyButton()) {
+        return;
+    }
+    int receipeId = buttonAssignments[buttonId];
+    if (receipeId==-1) {
+        write_to_log("Button %d pushed but no receipe assigned", buttonId);
+        return;
+    }
+    write_to_log("Button %d pushed. Need to prepare recepie %d", buttonId, receipeId);
+    recepie r = getRecepieById(receipeId);
+    prepareDrink(r);
+}
+
 void loopPanel() {
     // return;
     if (millis() < 1000) {
@@ -53,19 +81,17 @@ void loopPanel() {
     digitalWrite(PANEL_PIN_ENABLE,HIGH);
     // logPanel(incoming);
     lastPanelCheck = millis();
+    if (currentButtonDown>=0) {
+        if (bitRead(incoming,currentButtonDown) ==0) {
+            //button still down
+            return;
+        }
+    }
     // return;
     for(int i=5;i>=0;i--)
     {
         if (bitRead(incoming,i) ==0) {
-            int receipeId = buttonAssignments[i];
-            if (receipeId==-1) {
-                write_to_log("Button %d pushed but no receipe assigned", i);
-                return;
-            }
-            write_to_log("Button %d pushed. Need to prepare recepie %d", i, receipeId);
-            recepie r = getRecepieById(receipeId);
-            prepareDrink(r);
-            delay(500);
+            handleButtonDown(i);
             return;
         }
     }

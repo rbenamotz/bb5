@@ -15,6 +15,29 @@ void buildJsonInt(char* output, String name, int value) {
 }
 
 
+void handleGetPumps() {
+  char temp[300];
+  char output[500];
+  strcpy(output,"[");
+  for (int i=0; i<TOTAL_PUMPS; i++) {
+    if (i>0) {
+      strcat(output,",");
+    }
+    pumpState ps = pumpStates[i];
+    unsigned long working = 0;
+    unsigned long remaining =0;
+    if (ps.isWorking) {
+      unsigned long l = millis();
+      working = l - ps.startTime;
+      remaining = ps.scheduledStop - l;
+    }
+    sprintf(temp,"{\"id\":\"%d\",\"isWorking\":\"%d\",\"started\" : \"%lu\", \"remaining\" : \"%lu\"}",i+1,ps.isWorking,working,remaining);
+    strcat(output,temp);
+  }
+  strcat(output,"]");
+  server.send(200,"application/json", output);
+}
+
 void buildStepsAsJson(recepie r, char* buffer) {
   char temp[100];
   strcpy(buffer,"[");
@@ -111,6 +134,7 @@ void setupWebServer() {
   server.on("/ota", handleOta);
   server.on("/rst", handleRestart);
   server.on("/recepies", handleRecepies);
+  server.on("/pumps", handleGetPumps);
   for (int i=0; i<TOTAL_PUMPS; i++) {
     snprintf(buff, sizeof(buff), "/pumps/%d/clean",i+1);
     server.on(buff, handlePumpClean);

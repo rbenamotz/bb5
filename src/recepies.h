@@ -15,10 +15,10 @@
 #define RECEPIE_ID_BLOODY_MARRY 1
 
 
-struct preparationStep {
+typedef struct  {
     int ingredient;
     int milliliters;
-};
+} preparationStep;
 
 
 typedef struct { 
