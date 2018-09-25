@@ -48,10 +48,10 @@ bool stopOperationWithAnyButton() {
 }
 
 void handleButtonDown(int buttonId) {
+    currentButtonDown = buttonId;
     if (stopOperationWithAnyButton()) {
         return;
     }
-    currentButtonDown = buttonId;
     int receipeId = buttonAssignments[buttonId];
     if (receipeId==-1) {
         write_to_log("Button %d pushed but no receipe assigned", buttonId);
@@ -96,5 +96,6 @@ void loopPanel() {
             return;
         }
     }
+    currentButtonDown = -1;
 
 }

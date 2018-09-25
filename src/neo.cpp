@@ -15,7 +15,7 @@
 #include <NeoPixelAnimator.h>
 
 
-const uint16_t PixelCount = 22; // make sure to set this to the number of pixels in your strip
+const uint16_t PixelCount = 13; // make sure to set this to the number of pixels in your strip
 const uint16_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 const uint16_t AnimCount = PixelCount / 5 * 2 + 1; // we only need enough animations for the tail and one extra
 
@@ -146,5 +146,3 @@ void stopCupAnimation() {
     isAnimationOn = false;
 
 }
-
-
