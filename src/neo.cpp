@@ -137,7 +137,7 @@ void startCupAnimation() {
     if (isAnimationOn) {
         return;
     }
-    animations.StartAnimation(0, NextPixelMoveDuration, FadeOutAnimUpdate);  
+    animations.StartAnimation(0, NextPixelMoveDuration, LoopAnimUpdate);  
     isAnimationOn = true;  
 }
 void stopCupAnimation() {

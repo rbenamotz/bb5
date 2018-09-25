@@ -8,7 +8,7 @@
 int pumps[TOTAL_PUMPS];
 int pumpsPins[TOTAL_PUMPS] = PUMPS_PINS;
 pumpState pumpStates[TOTAL_PUMPS];
-
+bool isDrinkPublishedToMqtt = false;
 
 void setupPumps() {
     pumps[0] = PUMP_ID_0;
@@ -79,6 +79,7 @@ void pourStuff(int ingrdientId, int milliliters) {
 void prepareDrink(recepie r) {
     write_to_log ("Preparing %s" , r.name);
     mqttPublishCurrentDrink(r.name);
+    isDrinkPublishedToMqtt = true;
     for (int i=0; i<r.totalSteps; i++) {
         preparationStep step = r.steps[i];
         pourStuff(step.ingredient,step.milliliters);
@@ -101,6 +102,9 @@ void loopPumps() {
     }
     if (totalRunningPumps==0) {
         stopCupAnimation();
+    }
+    if (totalRunningPumps == 0 && isDrinkPublishedToMqtt) {
         mqttPublishCurrentDrink("");
+        isDrinkPublishedToMqtt = false;
     }
 }
