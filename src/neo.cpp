@@ -47,6 +47,7 @@ NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
 MyAnimationState animationState[AnimCount];
 uint16_t frontPixel = 0;  // the front of the loop
 RgbColor frontColor;  // the color at the front of the loop
+bool isAnimationOn = false;
 
 void SetRandomSeed()
 {
@@ -119,22 +120,31 @@ void setupNeo()
 {
     strip.Begin();
     strip.Show();
-
     SetRandomSeed();
-
-    // we use the index 0 animation to time how often we move to the next
-    // pixel in the strip
-    animations.StartAnimation(0, NextPixelMoveDuration, LoopAnimUpdate);
 }
 
 
 void loopNeo()
 {
-    // this is all that is needed to keep it running
-    // and avoiding using delay() is always a good thing for
-    // any timing related routines
+    if (!isAnimationOn) {
+        return;
+    }
     animations.UpdateAnimations();
     strip.Show();
+}
+
+void startCupAnimation() {
+    if (isAnimationOn) {
+        return;
+    }
+    animations.StartAnimation(0, NextPixelMoveDuration, LoopAnimUpdate);  
+    isAnimationOn = true;  
+}
+void stopCupAnimation() {
+    animations.StopAll();
+    strip.ClearTo(RgbColor(0,0,0));
+    isAnimationOn = false;
+
 }
 
 

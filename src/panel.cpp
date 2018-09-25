@@ -51,6 +51,7 @@ void handleButtonDown(int buttonId) {
     if (stopOperationWithAnyButton()) {
         return;
     }
+    currentButtonDown = buttonId;
     int receipeId = buttonAssignments[buttonId];
     if (receipeId==-1) {
         write_to_log("Button %d pushed but no receipe assigned", buttonId);

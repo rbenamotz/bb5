@@ -11,8 +11,6 @@ recepie cookBook[] = {
 
 
 void setupRecepies() {
-    // cookBook[1] = moscowMule();
-    // cookBook[2] = bloodyMarry();
 }
 
 
@@ -21,15 +19,13 @@ const char* getIngredientName(int id) {
 }
 
 recepie getRecepieById(int id) {
-    write_to_log("Looking for recepie %d in cookbook",id);
     for (int i=0; i<2; i++) {
         recepie r = cookBook[i];
         if (r.id==id) {
-            write_to_log("Found - returning %d", r.id);
             return r;
         }
     }
-    write_to_log("NOT Found. Returning empty");
+    write_to_log("Recepie %d not found in cookbook",id);
     recepie empty;
     empty.id = -1;
     empty.totalSteps = 0;

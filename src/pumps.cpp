@@ -2,6 +2,7 @@
 #include "pumps.h"
 #include "user_config.h"
 #include "common.h"
+#include "neo.h"
 
 int pumps[TOTAL_PUMPS];
 int pumpsPins[TOTAL_PUMPS] = PUMPS_PINS;
@@ -32,6 +33,7 @@ void pump(int pumpId, int milliliters) {
     pumpStates[pumpId].isWorking = true;
     pumpStates[pumpId].startTime = l;
     pumpStates[pumpId].scheduledStop = l + duration;
+    startCupAnimation();
 }
 
 
@@ -83,6 +85,7 @@ void prepareDrink(recepie r) {
 
 
 void loopPumps() {
+    int totalRunningPumps = 0;
     for (int i=0; i<TOTAL_PUMPS; i++) {
         pumpState p = pumpStates[i];
         if (!p.isWorking) {
@@ -90,7 +93,11 @@ void loopPumps() {
         }
         if (millis() >= p.scheduledStop) {
             stopPump(i);
+        } else {
+            totalRunningPumps++;
         }
     }
+    if (totalRunningPumps==0) {
+        stopCupAnimation();
+    }
 }
-

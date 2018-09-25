@@ -7,6 +7,7 @@
 #include "ota.h"
 #include "wifi.h"
 #include "webserver.h"
+#include "neo.h"
 
 
 
@@ -16,6 +17,7 @@ void setup() {
     setupWifi();
     setupOta();
     setupPumps();
+    setupNeo();
     //setupMqtt();
     setupPanel();
     setupWebServer();
@@ -29,5 +31,6 @@ void loop() {
     // prepareDrink(r);
     loopPanel();
     loopWebServer();
+    loopNeo();
     delay(5);
 }
