@@ -1,0 +1,2 @@
+void setupNeo();
+void loopNeo();

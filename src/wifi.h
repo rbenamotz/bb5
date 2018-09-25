@@ -1,0 +1,2 @@
+void loopWifi();
+void setupWifi();
