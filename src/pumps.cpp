@@ -8,7 +8,10 @@
 int pumps[TOTAL_PUMPS];
 int pumpsPins[TOTAL_PUMPS] = PUMPS_PINS;
 pumpState pumpStates[TOTAL_PUMPS];
-bool isDrinkPublishedToMqtt = false;
+bool isPrepingDrink = false;
+unsigned long remainingTime;
+int currentlyPreping = -1;
+
 
 void setupPumps() {
     pumps[0] = PUMP_ID_0;
@@ -18,8 +21,6 @@ void setupPumps() {
     for (int i=0; i<TOTAL_PUMPS; i++) {
         int pin = pumpsPins[i];
         pinMode(pin,OUTPUT);
-        digitalWrite(pin,HIGH);
-        delay(10);
         digitalWrite(pin,LOW);
         write_to_log("Pump %d set for pin %d",i, pumpsPins[i]);
     }
@@ -79,7 +80,8 @@ void pourStuff(int ingrdientId, int milliliters) {
 void prepareDrink(recepie r) {
     write_to_log ("Preparing %s" , r.name);
     mqttPublishCurrentDrink(r.name);
-    isDrinkPublishedToMqtt = true;
+    currentlyPreping = r.id;
+    isPrepingDrink = true;
     for (int i=0; i<r.totalSteps; i++) {
         preparationStep step = r.steps[i];
         pourStuff(step.ingredient,step.milliliters);
@@ -89,6 +91,7 @@ void prepareDrink(recepie r) {
 
 void loopPumps() {
     int totalRunningPumps = 0;
+    remainingTime = 0;
     for (int i=0; i<TOTAL_PUMPS; i++) {
         pumpState p = pumpStates[i];
         if (!p.isWorking) {
@@ -97,14 +100,20 @@ void loopPumps() {
         if (millis() >= p.scheduledStop) {
             stopPump(i);
         } else {
+            unsigned long l = p.scheduledStop - millis();
+            if (l>remainingTime) {
+                remainingTime = l;
+            }
             totalRunningPumps++;
         }
     }
-    if (totalRunningPumps==0) {
-        stopCupAnimation();
+    if (!isPrepingDrink) {
+        return;
     }
-    if (totalRunningPumps == 0 && isDrinkPublishedToMqtt) {
+    if (totalRunningPumps == 0) {
+        stopCupAnimation();
         mqttPublishCurrentDrink("");
-        isDrinkPublishedToMqtt = false;
+        currentlyPreping = -1;
+        isPrepingDrink = false;
     }
 }

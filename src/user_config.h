@@ -28,7 +28,7 @@
 #define PANEL_PIN_DATA 2
 //CLK INH purple, SH_LD yellow, CLK orange, Qh green
 
-#define BUTTON_RECEPIES {RECEPIE_ID_MOSCOW_MULE, RECEPIE_ID_BLOODY_MARRY, -1, -1, -1, -1}
+#define BUTTON_RECEPIES {RECEPIE_ID_MOSCOW_MULE, RECEPIE_ID_BLOODY_MARRY, RECEPIE_ID_VODKA, RECEPIE_ID_VIRGIN_MARRY, -1, -1}
 
 
 
@@ -37,7 +37,7 @@
 #define LOG_SIZE 20
 
 //WiFi
-#define WIFI_SSID "ssid
+#define WIFI_SSID "ssid"
 #define WIFI_PASS "password"
 #define HOST_NAME "bb5"
 // #define IP_ADDR 192, 168, 1, 3
@@ -47,10 +47,14 @@
 //MQTT
 #define MQTT_HOST "ip address"
 #define MQTT_PORT 1883
-#define MQTT_USER "user"
-#define MQTT_PASS "password!"
-#define MQTT_TOPIC_OUT_DRINK "/bb5/drink"
-#define MQTT_TOPIC_CMD "/bb5/cmd"
+#define MQTT_USER "username"
+#define MQTT_PASS "password"
+#define MQTT_TOPIC_DRINK_STATE "bb5/drink"
+#define MQTT_TOPIC_CMD "bb5/cmd"
+#define MQTT_TOPIC_LIGHT_STATE "bb5/light"
+#define MQTT_TOPIC_LIGHT_CMD "bb5/light/set"
+#define MQTT_TOPIC_REMAINING_TIME "bb5/remaining"
+
 
 
 

@@ -10,9 +10,11 @@
 #define INGREDIENTS {"Vodka" , "Ginger beer" , "Lime juice" , "Bloody Marry Mix", "Orange juice", "Cranberry juice" }
 
 
-#define TOTAL_RECEPIES 2
+#define TOTAL_RECEPIES 4
 #define RECEPIE_ID_MOSCOW_MULE 0
 #define RECEPIE_ID_BLOODY_MARRY 1
+#define RECEPIE_ID_VODKA 2
+#define RECEPIE_ID_VIRGIN_MARRY 3
 
 
 typedef struct  {

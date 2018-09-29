@@ -1,74 +1,32 @@
-// NeoPixelFunLoop
-// This example will move a trail of light around a series of pixels.  
-// A ring formation of pixels looks best.  
-// The trail will have a slowly fading tail.
-// 
-// This will demonstrate the use of the NeoPixelAnimator.
-// It shows the advanced use an animation to control the modification and 
-// starting of other animations.
-// It also shows the normal use of animating colors.
-// It also demonstrates the ability to share an animation channel rather than
-// hard code them to pixels.
-//
-
-#include <NeoPixelBus.h>
+#include "neo.h"
+#include "pumps.h"
+#include <Arduino.h>
+#include "common.h"
 #include <NeoPixelAnimator.h>
 
-
-const uint16_t PixelCount = 13; // make sure to set this to the number of pixels in your strip
-const uint16_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
-const uint16_t AnimCount = PixelCount / 5 * 2 + 1; // we only need enough animations for the tail and one extra
-
-const uint16_t PixelFadeDuration = 300; // third of a second
-// one second divide by the number of pixels = loop once a second
-const uint16_t NextPixelMoveDuration = 1000 / PixelCount; // how fast we move through the pixels
-
-NeoGamma<NeoGammaTableMethod> colorGamma; // for any fade animations, best to correct gamma
+#define LIGHT_JSON_TEMPLATE "{\"brightness\" : %d, \"color\" : {\"r\":%d, \"g\":%d, \"b\":%d}, \"state\" : \"%s\"}"
+const uint16_t PixelCount = 13;
+const uint8_t PixelPin = 2; 
+const uint8_t AnimationChannels = 1; // we only need one as all the pixels are animated at once
 
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
-// For Esp8266, the Pin is omitted and it uses GPIO3 due to DMA hardware use.  
-// There are other Esp8266 alternative methods that provide more pin options, but also have
-// other side effects.
-//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
-//
-// NeoEsp8266Uart800KbpsMethod uses GPI02 instead
+NeoPixelAnimator animations(AnimationChannels); 
 
-// what is stored for state is specific to the need, in this case, the colors and
-// the pixel to animate;
-// basically what ever you need inside the animation update function
+uint16_t effectState = 0;  
+unsigned long animationStartTime = 0;
+lightState contextLightState = {true,RgbColor(255,255,255),220};
+
 struct MyAnimationState
 {
     RgbColor StartingColor;
     RgbColor EndingColor;
-    uint16_t IndexPixel; // which pixel this animation is effecting
 };
 
-NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
-MyAnimationState animationState[AnimCount];
-uint16_t frontPixel = 0;  // the front of the loop
-RgbColor frontColor;  // the color at the front of the loop
-bool isAnimationOn = false;
+MyAnimationState animationState[AnimationChannels];
 
-void SetRandomSeed()
-{
-    uint32_t seed;
 
-    // random works best with a seed that can use 31 bits
-    // analogRead on a unconnected pin tends toward less than four bits
-    seed = analogRead(0);
-    delay(1);
-
-    for (int shifts = 3; shifts < 31; shifts += 3)
-    {
-        seed ^= analogRead(0) << shifts;
-        delay(1);
-    }
-
-    // Serial.println(seed);
-    randomSeed(seed);
-}
-
-void FadeOutAnimUpdate(const AnimationParam& param)
+// simple blend function
+void BlendAnimUpdate(const AnimationParam& param)
 {
     // this gets called for each animation on every time step
     // progress will start at 0.0 and end at 1.0
@@ -78,72 +36,133 @@ void FadeOutAnimUpdate(const AnimationParam& param)
         animationState[param.index].StartingColor,
         animationState[param.index].EndingColor,
         param.progress);
+
     // apply the color to the strip
-    strip.SetPixelColor(animationState[param.index].IndexPixel, 
-        colorGamma.Correct(updatedColor));
-}
-
-void LoopAnimUpdate(const AnimationParam& param)
-{
-    // wait for this animation to complete,
-    // we are using it as a timer of sorts
-    if (param.state == AnimationState_Completed)
+    for (uint16_t pixel = 0; pixel < PixelCount; pixel++)
     {
-        // done, time to restart this position tracking animation/timer
-        animations.RestartAnimation(param.index);
-
-        // pick the next pixel inline to start animating
-        // 
-        frontPixel = (frontPixel + 1) % PixelCount; // increment and wrap
-        if (frontPixel == 0)
-        {
-            // we looped, lets pick a new front color
-            frontColor = HslColor(random(360) / 360.0f, 1.0f, 0.25f);
-        }
-
-        uint16_t indexAnim;
-        // do we have an animation available to use to animate the next front pixel?
-        // if you see skipping, then either you are going to fast or need to increase
-        // the number of animation channels
-        if (animations.NextAvailableAnimation(&indexAnim, 1))
-        {
-            animationState[indexAnim].StartingColor = frontColor;
-            animationState[indexAnim].EndingColor = RgbColor(0, 0, 0);
-            animationState[indexAnim].IndexPixel = frontPixel;
-
-            animations.StartAnimation(indexAnim, PixelFadeDuration, FadeOutAnimUpdate);
-        }
+        strip.SetPixelColor(pixel, updatedColor);
     }
 }
+
+void fadeToIdleColor() {
+    // write_to_log("fading to idle color");
+    uint16_t time = 200;
+    RgbColor c = contextLightState.idleColor;
+    c.Darken(255 - contextLightState.brightness);
+    animationState[0].StartingColor = strip.GetPixelColor(0);
+    animationState[0].EndingColor = c;
+    animations.StartAnimation(0, time, BlendAnimUpdate);
+}
+
+void fadeToBlack() {
+    // write_to_log("fading to black");
+    const uint16_t time = 200;
+    animationState[0].StartingColor = strip.GetPixelColor(0);
+    animationState[0].EndingColor = RgbColor(0,0,0);
+    animations.StartAnimation(0, time, BlendAnimUpdate);
+}
+
+void FadeInFadeOutRinseRepeat(float luminance)
+{
+    if (effectState == 0)
+    {
+        // Fade upto a random color
+        // we use HslColor object as it allows us to easily pick a hue
+        // with the same saturation and luminance so the colors picked
+        // will have similiar overall brightness
+        RgbColor target = HslColor(random(360) / 360.0f, 1.0f, luminance);
+        uint16_t time = 500;
+
+        animationState[0].StartingColor = strip.GetPixelColor(0);
+        animationState[0].EndingColor = target;
+
+        animations.StartAnimation(0, time, BlendAnimUpdate);
+    }
+    else if (effectState == 1)
+    {
+        // fade to black
+        uint16_t time = random(50, 60);
+
+        animationState[0].StartingColor = strip.GetPixelColor(0);
+        animationState[0].EndingColor = RgbColor(0);
+
+        animations.StartAnimation(0, time, BlendAnimUpdate);
+    }
+
+    // toggle to the next effect state
+    effectState = (effectState + 1) % 2;
+}
+
+
+
 
 void setupNeo()
 {
     strip.Begin();
+    strip.ClearTo(RgbColor(0));
     strip.Show();
-    SetRandomSeed();
+    fadeToIdleColor();
 }
 
 
 void loopNeo()
 {
-    if (!isAnimationOn) {
+    if (animations.IsAnimating())
+    {
+        animations.UpdateAnimations();
+        strip.Show();
         return;
     }
-    animations.UpdateAnimations();
-    strip.Show();
+    if (!contextLightState.state) {
+        return;
+    }
+    if (animationStartTime == 0) {
+        return;
+    }
+    FadeInFadeOutRinseRepeat(0.5f); // 0.0 = black, 0.25 is normal, 0.5 is bright
 }
 
 void startCupAnimation() {
-    if (isAnimationOn) {
+    if (animationStartTime > 0) {
         return;
     }
-    animations.StartAnimation(0, NextPixelMoveDuration, LoopAnimUpdate);  
-    isAnimationOn = true;  
+    effectState = 0;
+    animationStartTime = millis();
 }
-void stopCupAnimation() {
-    animations.StopAll();
-    strip.ClearTo(RgbColor(0,0,0));
-    strip.Show();
-    isAnimationOn = false;
 
+
+void stopCupAnimation() {
+    if (animationStartTime ==0) {
+        return;
+    }
+    animations.StopAll();
+    animationStartTime = 0;
+    if (contextLightState.state) {
+        fadeToIdleColor();
+    } else {
+        fadeToBlack();
+    }
+}
+
+
+void refreshNeo() {
+    animations.StopAll();
+    animationStartTime = 0;
+    effectState = 0;
+    if (contextLightState.state) {
+        fadeToIdleColor();
+    } else {
+        fadeToBlack();
+    }
+}
+
+String idleColorAsJson() {
+    char temp[100];
+    RgbColor c = contextLightState.idleColor;
+    const char* s = "OFF";
+    if (contextLightState.state) {
+        s = "ON";
+    }
+    sprintf(temp,LIGHT_JSON_TEMPLATE,contextLightState.brightness, c.R,c.G,c.B,s);
+    return temp;    
 }

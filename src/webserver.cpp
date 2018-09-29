@@ -15,6 +15,25 @@ void buildJsonInt(char* output, String name, int value) {
 }
 
 
+void handleNotFound() {
+  write_to_log("not found \"%s\"",server.uri().c_str());
+  server.send(404,"text/plain","not found");
+}
+
+void handleData() {
+  char prep[100];
+  char temp[100];
+  for (int i=0; i<100; i++) {
+    prep[i] = '\0';
+  }
+  if (currentlyPreping>=0) {
+    recepie r = getRecepieById(currentlyPreping);
+    strcpy(prep,r.name);
+  }
+  sprintf(temp,"{\"preparing\" : \"%s\", \"remainingTime\":%lu}", prep,remainingTime);
+  server.send(200,"application/json",temp);
+}
+
 void handleGetPumps() {
   char temp[300];
   char output[500];
@@ -140,21 +159,39 @@ void handleCleanAll() {
 }
 
 
+//static pages
+void handleCssNormalize() {
+  server.send(200,"text/css",STATIC_PAGE_CSS_NOMRALIZE);
+}
+void handleCssSkeleton() {
+  server.send(200,"text/css",STATIC_PAGE_CSS_SKELETON);
+}
+void handleIndexPage() {
+  server.send(200,"text/html",STATIC_PAGE_INDEX);
+}
+
+
 void setupWebServer() {
   char buff[100];
   server.on("/log", handleLog);
-  server.on("/ota", handleOta);
-  server.on("/rst", handleRestart);
-  server.on("/recepies", handleRecepies);
-  server.on("/pumps", handleGetPumps);
-  server.on("/pumps/prepare", HTTP_POST, handlePrepDrink);
+  server.on("/api/ota", handleOta);
+  server.on("/api/rst", handleRestart);
+  server.on("/api/recepies", handleRecepies);
+  server.on("/api/pumps", handleGetPumps);
+  server.on("/api/data", handleData);
+  server.on("/api/recepies/prepare", HTTP_POST, handlePrepDrink);
   for (int i=0; i<TOTAL_PUMPS; i++) {
-    snprintf(buff, sizeof(buff), "/pumps/%d/clean",i+1);
+    snprintf(buff, sizeof(buff), "/api/pumps/%d/clean",i+1);
     server.on(buff, handlePumpClean);
-    snprintf(buff, sizeof(buff), "/pumps/%d/pump",i+1);
+    snprintf(buff, sizeof(buff), "/api/pumps/%d/pump",i+1);
     server.on(buff,HTTP_POST, handlePumpPour);
   }
-  server.on("/pumps/clean", handleCleanAll);
+  server.on("/pumps/api/clean", handleCleanAll);
+  //static
+  server.on("/css/normalize.css",handleCssNormalize);
+  server.on("/css/skeleton.css",handleCssSkeleton);
+  server.on("/",handleIndexPage);
+  server.onNotFound(handleNotFound);
   server.begin();
   write_to_log("Web server listening");
 }

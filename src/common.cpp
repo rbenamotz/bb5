@@ -8,10 +8,29 @@ String log_buffer[LOG_SIZE];
 unsigned long log_buffer_ms[LOG_SIZE];
 int log_buffer_index = -1;
 
+void SetRandomSeed()
+{
+    uint32_t seed;
+
+    // random works best with a seed that can use 31 bits
+    // analogRead on a unconnected pin tends toward less than four bits
+    seed = analogRead(0);
+    delay(1);
+
+    for (int shifts = 3; shifts < 31; shifts += 3)
+    {
+        seed ^= analogRead(0) << shifts;
+        delay(1);
+    }
+
+    randomSeed(seed);
+}
+
 void setupCommon() {
   if (LOG_TO_SERIAL) {
     Serial.begin(115200);
   }
+  SetRandomSeed();
 }
 
 void write_to_log(String line, ...) {

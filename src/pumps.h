@@ -21,6 +21,7 @@ typedef struct {
 } pumpState;
 
 extern pumpState pumpStates[TOTAL_PUMPS];
-
+extern unsigned long remainingTime;
+extern int currentlyPreping;
 
 #endif

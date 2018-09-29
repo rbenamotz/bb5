@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    function onload() {
+      loadRecpeis();
+      updateData();
+
+    }
+
+    function updateData() {
+      var xhr = new XMLHttpRequest();
+      xhr.addEventListener("readystatechange", function () {
+        if (this.readyState === this.DONE) {
+          var d = JSON.parse(this.responseText);
+          var s = d.preparing;
+          if (d.remainingTime > 0)
+            s+= " (" + Math.round(d.remainingTime / 1000) + ")";
+          var bar = document.getElementById("statusBar");
+          if (s=="")
+            s = "Choose Your Drink";
+          bar.innerText = s;
+          window.setTimeout(updateData,100);
+        }
+      });
+      xhr.open("GET", "api/data");
+      xhr.send();
+
+    }
+
+    function prepRecepie(recepieId) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "api/recepies/prepare");
+      xhr.setRequestHeader("content-type", "text/plain");
+      xhr.send(recepieId);
+    }
+
+    function populateRecepeiesTable(t) {
+      var recepies = JSON.parse(t);
+      var tbl = document.getElementById("tblRecepies");
+      var tbody = tbl.getElementsByTagName("tbody")[0];
+      recepies.forEach(element => {
+        var tr = document.createElement("tr");
+        tbody.appendChild(tr);
+        var cell1 = document.createElement('th');
+        tr.appendChild(cell1);
+        var cell2 = tr.insertCell(1);
+        var cell3 = tr.insertCell(2);
+        cell1.innerText = element.name;
+        var descr = "";
+        element.steps.forEach(step => {
+          if (descr != "") descr = descr + ", ";
+          descr = descr + step.ingredient;
+        });
+        cell2.innerText = descr;
+        var a = document.createElement("a");
+        a.href = "javascript:prepRecepie(" + element.id + ")";
+        a.innerText = "[prep]";
+        cell3.appendChild(a);
+      });
+    }
+    function loadRecpeis() {
+      if (false) {
+        var t = "[{\"id\":\"0\",\"name\":\"Moscow Mule\",\"steps\" : [{\"ingredient\":\"Lime juice\",\"quantity\":\"15\"},{\"ingredient\":\"Vodka\",\"quantity\":\"60\"},{\"ingredient\":\"Ginger beer\",\"quantity\":\"180\"}]},{\"id\":\"1\",\"name\":\"Bloody Marry\",\"steps\" : [{\"ingredient\":\"Vodka\",\"quantity\":\"60\"},{\"ingredient\":\"Bloody Marry Mix\",\"quantity\":\"180\"}]},{\"id\":\"2\",\"name\":\"Vodka\",\"steps\" : [{\"ingredient\":\"Vodka\",\"quantity\":\"60\"}]},{\"id\":\"3\",\"name\":\"Virgin Marry\",\"steps\" : [{\"ingredient\":\"Bloody Marry Mix\",\"quantity\":\"180\"}]}]";
+        populateRecepeiesTable(t);
+        return;
+      }
+
+      var xhr = new XMLHttpRequest();
+      xhr.addEventListener("readystatechange", function () {
+        if (this.readyState === this.DONE) {
+          populateRecepeiesTable(this.responseText);
+        }
+      });
+      xhr.open("GET", "api/recepies");
+      xhr.send();
+    }
+  </script>
+  <meta charset="utf-8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>BB5</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css"> -->
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+
+</head>
+
+<body onload="onload()">
+  <h1>BB5</h1>
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <h5 class="u-max-full-width" style="text-align: center; background-color: rgb(28, 206, 238);" id="statusBar">&nbsp;</h5>
+  <table id="tblRecepies">
+    <thead>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+  <!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+
+</html>

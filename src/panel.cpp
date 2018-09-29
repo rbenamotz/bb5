@@ -11,7 +11,6 @@ int currentButtonDown = -1;
 
 
 void setupPanel() {
-    // return;
     pinMode(PANEL_PIN_ENABLE,OUTPUT);
     pinMode(PANEL_PIN_LOAD,OUTPUT);
     pinMode(PANEL_PIN_CLOCK,OUTPUT);
@@ -19,20 +18,7 @@ void setupPanel() {
     digitalWrite(PANEL_PIN_LOAD,HIGH);
     digitalWrite(PANEL_PIN_ENABLE,HIGH);
 }
-void logPanel (byte incoming) {
-    unsigned long l = millis() - lastPanelStatusLogged;
-    if (l<1000) {
-        return;
-    }
-    String panel = "";
-    for(int i=5;i>=0;i--)
-    {
-        panel = panel + bitRead(incoming,i);
-    }
-    write_to_log(panel);
-    lastPanelStatusLogged = millis();
 
-}
 
 bool stopOperationWithAnyButton() {
     bool output = false;
@@ -61,9 +47,14 @@ void handleButtonDown(int buttonId) {
     recepie r = getRecepieById(receipeId);
     prepareDrink(r);
 }
+bool isButtonStillDown(byte incoming) {
+    if (currentButtonDown ==- 1) {
+        return false;
+    }
+    return (bitRead(incoming,currentButtonDown) ==0);
+}
 
 void loopPanel() {
-    // return;
     if (millis() < 1000) {
         return;
     }
@@ -80,15 +71,10 @@ void loopPanel() {
     digitalWrite(PANEL_PIN_ENABLE,LOW);
     byte incoming=shiftIn(PANEL_PIN_DATA,PANEL_PIN_CLOCK,MSBFIRST);
     digitalWrite(PANEL_PIN_ENABLE,HIGH);
-    // logPanel(incoming);
     lastPanelCheck = millis();
-    if (currentButtonDown>=0) {
-        if (bitRead(incoming,currentButtonDown) ==0) {
-            //button still down
-            return;
-        }
+    if (isButtonStillDown(incoming)) {
+        return;
     }
-    // return;
     for(int i=5;i>=0;i--)
     {
         if (bitRead(incoming,i) ==0) {
@@ -97,5 +83,4 @@ void loopPanel() {
         }
     }
     currentButtonDown = -1;
-
 }
