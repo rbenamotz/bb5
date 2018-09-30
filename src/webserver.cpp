@@ -160,12 +160,6 @@ void handleCleanAll() {
 
 
 //static pages
-void handleCssNormalize() {
-  server.send(200,"text/css",STATIC_PAGE_CSS_NOMRALIZE);
-}
-void handleCssSkeleton() {
-  server.send(200,"text/css",STATIC_PAGE_CSS_SKELETON);
-}
 void handleIndexPage() {
   server.send(200,"text/html",STATIC_PAGE_INDEX);
 }
@@ -188,8 +182,6 @@ void setupWebServer() {
   }
   server.on("/pumps/api/clean", handleCleanAll);
   //static
-  server.on("/css/normalize.css",handleCssNormalize);
-  server.on("/css/skeleton.css",handleCssSkeleton);
   server.on("/",handleIndexPage);
   server.onNotFound(handleNotFound);
   server.begin();

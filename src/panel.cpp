@@ -59,7 +59,7 @@ void loopPanel() {
         return;
     }
     unsigned long l = millis() - lastPanelCheck;
-    if (l<10) {
+    if (l<50) {
         return;
     }
     digitalWrite(PANEL_PIN_LOAD,LOW);
