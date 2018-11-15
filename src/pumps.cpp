@@ -88,6 +88,19 @@ void prepareDrink(recepie r) {
     }
 }
 
+bool stopAllPumps() {
+    bool output = false;
+    for (int i=0; i<TOTAL_PUMPS; i++) {
+        pumpState ps = pumpStates[i];
+        if (ps.isWorking) {
+            write_to_log("Need to stop pump %d",i);
+            stopPump(i);
+            output = true;
+        }
+    }
+    return output;
+}
+
 
 void loopPumps() {
     int totalRunningPumps = 0;

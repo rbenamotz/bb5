@@ -12,6 +12,7 @@ void cleanPump(int pumpId);
 void cleanAllPumps();
 void pump(int pumpId, int milliliters);
 void stopPump(int pumpId);
+bool stopAllPumps();
 
 typedef struct { 
     int id;

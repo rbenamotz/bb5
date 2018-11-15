@@ -20,22 +20,10 @@ void setupPanel() {
 }
 
 
-bool stopOperationWithAnyButton() {
-    bool output = false;
-    for (int i=0; i<TOTAL_PUMPS; i++) {
-        pumpState ps = pumpStates[i];
-        if (ps.isWorking) {
-            write_to_log("Need to stop pump %d due to button down",i);
-            stopPump(i);
-            output = true;
-        }
-    }
-    return output;
-}
 
 void handleButtonDown(int buttonId) {
     currentButtonDown = buttonId;
-    if (stopOperationWithAnyButton()) {
+    if (stopAllPumps()) {
         return;
     }
     int receipeId = buttonAssignments[buttonId];

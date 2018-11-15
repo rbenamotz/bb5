@@ -158,6 +158,14 @@ void handleCleanAll() {
   cleanAllPumps();
 }
 
+void handleStopAllPumps() {
+  if (stopAllPumps()) {
+    server.send(200,"text/plain","ok");
+    return;
+  }
+  server.send(200,"text/plain","no pumps working");
+}
+
 
 //static pages
 void handleIndexPage() {
@@ -180,7 +188,8 @@ void setupWebServer() {
     snprintf(buff, sizeof(buff), "/api/pumps/%d/pump",i+1);
     server.on(buff,HTTP_POST, handlePumpPour);
   }
-  server.on("/pumps/api/clean", handleCleanAll);
+  server.on("/api/pumps/clean", handleCleanAll);
+  server.on("/api/pumps/stop", handleStopAllPumps);
   //static
   server.on("/",handleIndexPage);
   server.onNotFound(handleNotFound);
