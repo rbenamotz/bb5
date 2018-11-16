@@ -13,6 +13,9 @@ void cleanAllPumps();
 void pump(int pumpId, int milliliters);
 void stopPump(int pumpId);
 bool stopAllPumps();
+void primeAllPumps();
+void primePump(int pumpId);
+void shotPump(int pumpId);
 
 typedef struct { 
     int id;

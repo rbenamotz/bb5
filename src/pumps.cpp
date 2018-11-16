@@ -5,6 +5,9 @@
 #include "neo.h"
 #include "mqtt.h"
 
+#define PUMP_PRIME_VOLUME 5
+#define PUMP_SHOT_VOLUME 60
+
 int pumps[TOTAL_PUMPS];
 int pumpsPins[TOTAL_PUMPS] = PUMPS_PINS;
 pumpState pumpStates[TOTAL_PUMPS];
@@ -48,7 +51,6 @@ void stopPump(int pumpId) {
 
 void cleanPump(int pumpId) {
     pump(pumpId,PUMP_CLEAN_VOLUME);
-    write_to_log("Done clenaing");
 }
 
 void cleanAllPumps() {
@@ -58,6 +60,25 @@ void cleanAllPumps() {
         cleanPump(i);
     }
 }
+
+void primePump(int pumpId) {
+    write_to_log("priming pump %d", pumpId);
+    pump(pumpId,PUMP_PRIME_VOLUME);
+}
+
+void primeAllPumps() {
+    write_to_log("Priming all pumps");
+    for (int i=0 ; i<TOTAL_PUMPS; i++) {
+        primePump(i);
+    }
+}
+
+void shotPump(int pumpId) {
+    write_to_log("shot from pump %d", pumpId);
+    pump(pumpId,PUMP_SHOT_VOLUME);
+
+}
+
 
 int pumpIdByIngredientId(int ingrdientId) {
     for (int i=0; i<TOTAL_PUMPS; i++) {
@@ -98,6 +119,7 @@ bool stopAllPumps() {
             output = true;
         }
     }
+    stopCupAnimation();
     return output;
 }
 
@@ -119,6 +141,9 @@ void loopPumps() {
             }
             totalRunningPumps++;
         }
+    }
+    if (totalRunningPumps == 0) {
+        stopCupAnimation();
     }
     if (!isPrepingDrink) {
         return;

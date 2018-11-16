@@ -85,7 +85,7 @@ void buildStepsAsJson(recepie r, char* buffer) {
 
 void handleRecepies() {
   char temp[300];
-  char output[500];
+  char output[800];
   strcpy(output,"[");
   for (int i=0; i<TOTAL_RECEPIES; i++) {
     if (i>0) {
@@ -120,7 +120,7 @@ void handleRestart() {
 //Pumps
 
 int extractPumpId() {
-  char c = server.uri().charAt(7);
+  char c = server.uri().charAt(11);
   int pumpId = (int) (c - '0') - 1;
   if (pumpId<0 || pumpId >= TOTAL_PUMPS) {
     char temp[10];
@@ -141,6 +141,33 @@ void handlePumpClean() {
   server.send(200,"text/plain",temp);
   cleanPump(pumpId);
 }
+
+void handlePumpPrime() {
+  int pumpId = extractPumpId();
+  if (pumpId==-1) {
+    return;
+  }
+  server.send(200,"text/plain","ok");
+  primePump(pumpId);
+}
+
+
+void handlePumpShot() {
+  int pumpId = extractPumpId();
+  if (pumpId==-1) {
+    return;
+  }
+  server.send(200,"text/plain","ok");
+  shotPump(pumpId);
+}
+
+
+
+void handlePrimeAll() {
+  primeAllPumps();
+  server.send(200,"text/plain","ok");
+}
+
 
 void handlePumpPour() {
   int pumpId = extractPumpId();
@@ -187,9 +214,14 @@ void setupWebServer() {
     server.on(buff, handlePumpClean);
     snprintf(buff, sizeof(buff), "/api/pumps/%d/pump",i+1);
     server.on(buff,HTTP_POST, handlePumpPour);
+    snprintf(buff, sizeof(buff), "/api/pumps/%d/prime",i+1);
+    server.on(buff,HTTP_POST, handlePumpPrime);
+    snprintf(buff, sizeof(buff), "/api/pumps/%d/shot",i+1);
+    server.on(buff,HTTP_POST, handlePumpShot);
   }
   server.on("/api/pumps/clean", handleCleanAll);
-  server.on("/api/pumps/stop", handleStopAllPumps);
+  server.on("/api/pumps/prime", handlePrimeAll);
+  server.on("/api/pumps/stop",HTTP_POST, handleStopAllPumps);
   //static
   server.on("/",handleIndexPage);
   server.onNotFound(handleNotFound);

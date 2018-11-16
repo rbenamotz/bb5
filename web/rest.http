@@ -9,7 +9,7 @@ http://192.168.1.49/api/pumps/clean
 
 
 ###
-http://192.168.1.49/api/pumps/stop
+POST http://192.168.1.49/api/pumps/stop
 
 
 ###
@@ -17,3 +17,38 @@ http://192.168.1.49/log
 
 ###
 http://192.168.1.49/api/ota
+
+
+###
+http://192.168.1.49/log
+
+###
+
+POST http://192.168.1.49/api/recepies/prepare HTTP/1.1
+content-type: text/plain
+
+2
+
+###
+http://192.168.1.49/api/recepies
+
+###
+http://192.168.1.49/api/pumps
+
+###
+POST http://192.168.1.49/api/pumps/1/prime
+
+###
+POST http://192.168.1.49/api/pumps/2/prime
+
+
+###
+POST http://192.168.1.49/api/pumps/3/prime
+
+
+
+###
+POST http://192.168.1.49/api/pumps/4/prime
+
+###
+POST http://192.168.1.49/api/pumps/prime
