@@ -1,6 +1,21 @@
-#include <Arduino.h>
-#include "user_config.h"
+#ifndef COMMON_H
+#define COMMON_H
 
-void setupCommon();
-void write_to_log(String line, ...);
-String read_log_buffer();
+extern bool globalIsWifiConnected;
+
+
+void setupPanel();
+void loopPanel();
+
+void setupOta();
+void loopOta();
+
+void loopWifi();
+void setupWifi();
+
+void setupLedStrip();
+void loopLedStrip();
+
+
+
+#endif

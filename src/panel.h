@@ -1,2 +1,0 @@
-void setupPanel();
-void loopPanel();
